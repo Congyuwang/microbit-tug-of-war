@@ -1,12 +1,18 @@
 use super::s2_game::Players;
-use crate::{display_col, undisplay_col, DisplayPinsArray};
+use crate::{display_col, undisplay_col, ButtonState, DisplayPinsArray};
 
 /// by columns
 const CHAR_A: [u8; 4] = [0b11110, 0b00101, 0b00101, 0b11110];
 const CHAR_B: [u8; 4] = [0b11111, 0b10101, 0b10101, 0b01010];
 const CHAR_AB: [[u8; 4]; 2] = [CHAR_A, CHAR_B];
 
-pub fn result_animation(cnt: &mut u8, winner: &Players, display_pins: &mut DisplayPinsArray) {
+/// Returns whether both buttons are pressed.
+pub fn result_animation(
+    cnt: &mut u8,
+    winner: &Players,
+    buttons: &ButtonState,
+    display_pins: &mut DisplayPinsArray,
+) -> bool {
     const ROW_MASK: u8 = 0b11;
 
     // compute col to display
@@ -22,6 +28,8 @@ pub fn result_animation(cnt: &mut u8, winner: &Players, display_pins: &mut Displ
     // update states
     // 256HZ * 256 = 1s
     *cnt += 1;
+
+    buttons.both_pressed()
 }
 
 #[inline]
