@@ -43,4 +43,9 @@ impl ButtonState {
     pub fn last_a(&self) -> bool {
         self.state & LAST_BUTTON_MASK == 0
     }
+
+    #[inline]
+    pub fn reset(&mut self) {
+        self.state = 0
+    }
 }

@@ -53,7 +53,6 @@ struct Device {
 fn main() -> ! {
     // rtt_init_print!();
     let board = Board::take().unwrap();
-    // board.
     init_rtc(board.CLOCK, board.RTC0);
     init_device(
         board.display_pins,

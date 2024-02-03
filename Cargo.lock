@@ -337,7 +337,7 @@ checksum = "a718c727b686154a7c7913f70d7ebc8956f701cbab466bc22035cb27f378882b"
 
 [[package]]
 name = "tug-of-war"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "cortex-m",
  "cortex-m-rt",
