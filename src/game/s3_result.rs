@@ -8,18 +8,19 @@ const CHAR_AB: [[u8; 4]; 2] = [CHAR_A, CHAR_B];
 
 /// Returns whether both buttons are pressed.
 pub fn result_animation(
-    cnt: &mut u8,
+    cnt: &mut u16,
     winner: &Players,
-    buttons: &ButtonState,
+    buttons: &mut ButtonState,
     display_pins: &mut DisplayPinsArray,
 ) -> bool {
-    const ROW_MASK: u8 = 0b11;
+    const ROW_MASK: u16 = 0b11;
+    const DISPLAY_MASK: u16 = 0b1111_1111;
 
     // compute col to display
-    let col = *cnt & ROW_MASK;
+    let col = (*cnt & ROW_MASK) as u8;
 
     // update screen
-    match *cnt {
+    match *cnt & DISPLAY_MASK {
         0..=127 => display_result_col(col, winner, display_pins),
         128 => clear_countdown_display(display_pins, winner),
         _ => (),
@@ -29,7 +30,11 @@ pub fn result_animation(
     // 256HZ * 256 = 1s
     *cnt += 1;
 
-    buttons.both_pressed()
+    if *cnt == 255 {
+        buttons.reset();
+    }
+    // check reset only after 1 sec
+    *cnt > 255 && buttons.both_pressed()
 }
 
 #[inline]

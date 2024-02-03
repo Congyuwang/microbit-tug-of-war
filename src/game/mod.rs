@@ -6,7 +6,7 @@ use microbit::hal::{rtc::RtcInterrupt, Rng};
 use self::s2_game::Players;
 use crate::{
     sound::{Sound, DI_HI, PEPPA},
-    ButtonState, DotState, DEVICE, RTC,
+    DotState, DEVICE, RTC,
 };
 
 mod s0_idle;
@@ -17,9 +17,9 @@ mod s3_result;
 /// The state machine of the game.
 pub enum Game {
     IdleAnimation { dot: DotState, cnt: i8 },
-    ReadyAnimation { cnt: u8, count_down: u8 },
+    ReadyAnimation { count_down: u8, cnt: u8 },
     Playing { dot: DotState, cnt: i8 },
-    Result { cnt: u8, winner: Players },
+    Result { winner: Players, cnt: u16 },
 }
 
 impl Game {
@@ -41,7 +41,7 @@ impl Game {
         match self {
             Game::IdleAnimation { cnt, dot } => {
                 if s0_idle::idle_animation(cnt, dot, &device.buttons, &mut device.display) {
-                    *self = Self::ready_animation(&mut device.buttons);
+                    *self = Self::ready_animation();
                 }
             }
             Game::ReadyAnimation { cnt, count_down } => {
@@ -51,35 +51,39 @@ impl Game {
                     &mut device.display,
                     &mut device.sound,
                 ) {
-                    *self =
-                        Self::start_game(&mut device.rng, &mut device.buttons, &mut device.sound);
+                    device.buttons.reset();
+                    *self = Self::start_game(&mut device.rng, &mut device.sound);
                 }
             }
             Game::Playing { dot, cnt } => {
                 if let Some(winner) = s2_game::game(cnt, dot, &device.buttons, &mut device.display)
                 {
-                    *self = Self::result(winner, &mut device.buttons, &mut device.sound);
+                    *self = Self::result(winner, &mut device.sound);
                 }
             }
             Game::Result { cnt, winner } => {
-                if s3_result::result_animation(cnt, winner, &device.buttons, &mut device.display) {
-                    *self = Self::ready_animation(&mut device.buttons)
+                if s3_result::result_animation(
+                    cnt,
+                    winner,
+                    &mut device.buttons,
+                    &mut device.display,
+                ) {
+                    device.buttons.reset();
+                    *self = Self::ready_animation()
                 }
             }
         }
     }
 
-    fn ready_animation(buttons: &mut ButtonState) -> Self {
+    fn ready_animation() -> Self {
         const COUNTDOWN: u8 = 3;
-        buttons.reset();
         Game::ReadyAnimation {
             cnt: 0,
             count_down: COUNTDOWN,
         }
     }
 
-    fn start_game(rng: &mut Rng, buttons: &mut ButtonState, sound: &mut Sound) -> Self {
-        buttons.reset();
+    fn start_game(rng: &mut Rng, sound: &mut Sound) -> Self {
         let mut dot = DotState::new();
         if let 0..=127 = rng.random_u8() {
             dot.toggle_clockwise();
@@ -91,8 +95,7 @@ impl Game {
         }
     }
 
-    fn result(winner: Players, buttons: &mut ButtonState, sound: &mut Sound) -> Self {
-        buttons.reset();
+    fn result(winner: Players, sound: &mut Sound) -> Self {
         sound.play_track(&PEPPA);
         Game::Result { cnt: 0, winner }
     }
