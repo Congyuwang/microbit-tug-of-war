@@ -41,6 +41,7 @@ impl Game {
         match self {
             Game::IdleAnimation { cnt, dot } => {
                 if s0_idle::idle_animation(cnt, dot, &device.buttons, &mut device.display) {
+                    // IdleAnimation -> ReadyAnimation
                     *self = Self::ready_animation();
                 }
             }
@@ -52,12 +53,15 @@ impl Game {
                     &mut device.sound,
                 ) {
                     device.buttons.reset();
-                    *self = Self::start_game(&mut device.rng, &mut device.sound);
+                    // Ready -> Playing (reset buttons)
+                    *self = Self::playing(&mut device.rng, &mut device.sound);
                 }
             }
             Game::Playing { dot, cnt } => {
                 if let Some(winner) = s2_game::game(cnt, dot, &device.buttons, &mut device.display)
                 {
+                    // Playing -> Result
+                    // (buttons reset 1 sec afterwards within result_animation).
                     *self = Self::result(winner, &mut device.sound);
                 }
             }
@@ -68,7 +72,7 @@ impl Game {
                     &mut device.buttons,
                     &mut device.display,
                 ) {
-                    device.buttons.reset();
+                    // Result -> ReadyAnimation
                     *self = Self::ready_animation()
                 }
             }
@@ -83,7 +87,7 @@ impl Game {
         }
     }
 
-    fn start_game(rng: &mut Rng, sound: &mut Sound) -> Self {
+    fn playing(rng: &mut Rng, sound: &mut Sound) -> Self {
         let mut dot = DotState::new();
         if let 0..=127 = rng.random_u8() {
             dot.toggle_clockwise();
