@@ -26,13 +26,13 @@ pub fn result_animation(cnt: &mut u8, winner: &Players, display_pins: &mut Displ
 
 #[inline]
 fn clear_countdown_display(display_pins: &mut DisplayPinsArray, winner: &Players) {
-    let player_b_wins = (*winner == Players::B) as u8;
+    let player_b_wins = *winner as u8;
     undisplay_col(3 + player_b_wins, display_pins);
 }
 
 #[inline]
 fn display_result_col(col: u8, winner: &Players, display_pins: &mut DisplayPinsArray) {
-    let player_b_wins = (*winner == Players::B) as u8;
+    let player_b_wins = *winner as u8;
     undisplay_col(col_to_undisplay(col, winner), display_pins);
     display_col(
         col + player_b_wins,
@@ -43,7 +43,7 @@ fn display_result_col(col: u8, winner: &Players, display_pins: &mut DisplayPinsA
 
 #[inline]
 fn col_to_undisplay(col: u8, winner: &Players) -> u8 {
-    let player_b_wins = (*winner == Players::B) as u8;
+    let player_b_wins = *winner as u8;
     match col {
         0 => 3 + player_b_wins,
         1 => 0 + player_b_wins,

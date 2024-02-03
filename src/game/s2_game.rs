@@ -6,7 +6,7 @@ use crate::{display_px, undisplay_px, ButtonState, DisplayPinsArray, DotState, C
 pub const INIT_CNT: i8 = -1;
 
 #[repr(u8)]
-#[derive(PartialEq, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub enum Players {
     A = 0,
     B = 1,
