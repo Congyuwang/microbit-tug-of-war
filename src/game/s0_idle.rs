@@ -16,19 +16,19 @@ pub fn idle_animation(
 
     // display the running dot
     match *cnt {
-        INIT_CN => display_px(&dot.px(), display_pins),
+        INIT_CN => display_px(dot.px(), display_pins),
         6 | 14 => {
-            undisplay_px(&dot.px(), display_pins);
+            undisplay_px(dot.px(), display_pins);
             display_px(&CENTER, display_pins);
         }
         7 => {
             undisplay_px(&CENTER, display_pins);
-            display_px(&dot.px(), display_pins);
+            display_px(dot.px(), display_pins);
         }
         15 => {
             undisplay_px(&CENTER, display_pins);
             dot_idle_spiral(dot);
-            display_px(&dot.px(), display_pins);
+            display_px(dot.px(), display_pins);
         }
         _ => (),
     }
@@ -57,6 +57,6 @@ fn game_started(buttons: &ButtonState) -> bool {
 
 #[inline]
 fn clear_idle_animation(dot: &DotState, display_pins: &mut DisplayPinsArray) {
-    undisplay_px(&dot.px(), display_pins);
+    undisplay_px(dot.px(), display_pins);
     undisplay_px(&CENTER, display_pins);
 }

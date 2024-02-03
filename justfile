@@ -1,4 +1,5 @@
 build:
+    cargo clippy --target thumbv7em-none-eabihf --release
     cargo build --target thumbv7em-none-eabihf --release
 
 flash:

@@ -234,7 +234,7 @@ impl AudioState {
     /// Silent note is treated differently with refresh instead of loop.
     fn play_note(pwm: pwm::Pwm<PWM0>, (note, t_ms): Note) -> pwm::Pwm<PWM0> {
         let repeat = Self::loops(t_ms, note.len());
-        if note == &SI {
+        if note == SI {
             pwm.set_loop(pwm::Loop::Times(1));
             pwm.set_seq_end_delay(pwm::Seq::Seq0, repeat as u32);
         } else {
@@ -262,7 +262,7 @@ impl AudioState {
 
     #[inline]
     fn loops(t_ms: u16, sample_len: usize) -> u16 {
-        (t_ms as u32 * SAMPLE_FREQ as u32 / 1000 as u32 / sample_len as u32).max(1) as u16
+        (t_ms as u32 * SAMPLE_FREQ as u32 / 1000_u32 / sample_len as u32).max(1) as u16
     }
 }
 

@@ -18,7 +18,7 @@ mod s3_result;
 pub enum Game {
     IdleAnimation { dot: DotState, cnt: i8 },
     ReadyAnimation { cnt: u8, count_down: u8 },
-    InGame { dot: DotState, cnt: i8 },
+    Playing { dot: DotState, cnt: i8 },
     Result { cnt: u8, winner: Players },
 }
 
@@ -54,14 +54,14 @@ impl Game {
                     *self = Self::start_game(&mut device.rng, &mut device.sound);
                 }
             }
-            Game::InGame { dot, cnt } => {
+            Game::Playing { dot, cnt } => {
                 if let Some(winner) = s2_game::game(cnt, dot, &device.buttons, &mut device.display)
                 {
                     *self = Self::result(winner, &mut device.sound);
                 }
             }
             Game::Result { cnt, winner } => {
-                s3_result::result_animation(cnt, &winner, &mut device.display)
+                s3_result::result_animation(cnt, winner, &mut device.display)
             }
         }
     }
@@ -80,7 +80,7 @@ impl Game {
             dot.toggle_clockwise();
         }
         sound.play_track(&DI_HI);
-        Game::InGame {
+        Game::Playing {
             dot,
             cnt: s2_game::INIT_CNT,
         }
@@ -92,9 +92,8 @@ impl Game {
     }
 
     fn reset_rtc(cs: &CriticalSection) {
-        RTC.borrow(cs)
-            .borrow_mut()
-            .as_mut()
-            .map(|rtc| rtc.reset_event(RtcInterrupt::Tick));
+        if let Some(rtc) = RTC.borrow(cs).borrow_mut().as_mut() {
+            rtc.reset_event(RtcInterrupt::Tick)
+        }
     }
 }

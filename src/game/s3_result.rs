@@ -46,7 +46,7 @@ fn col_to_undisplay(col: u8, winner: &Players) -> u8 {
     let player_b_wins = *winner as u8;
     match col {
         0 => 3 + player_b_wins,
-        1 => 0 + player_b_wins,
+        1 => player_b_wins,
         2 => 1 + player_b_wins,
         3 => 2 + player_b_wins,
         _ => panic!(),

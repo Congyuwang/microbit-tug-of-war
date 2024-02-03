@@ -64,7 +64,9 @@ fn main() -> ! {
         board.PWM0,
         board.NVIC,
     );
-    loop {}
+    loop {
+        cortex_m::asm::wfe();
+    }
 }
 
 /// initialize a 256HZ RTC clock.

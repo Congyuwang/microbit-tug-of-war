@@ -23,21 +23,21 @@ pub fn game(
 
     // display the running dot and goal position
     match *cnt {
-        INIT_CNT => display_px(&dot.px(), display_pins),
+        INIT_CNT => display_px(dot.px(), display_pins),
         6 | 14 => {
-            undisplay_px(&dot.px(), display_pins);
+            undisplay_px(dot.px(), display_pins);
             display_px(&CENTER, display_pins);
         }
         7 => {
             undisplay_px(&CENTER, display_pins);
-            display_px(&dot.px(), display_pins);
+            display_px(dot.px(), display_pins);
         }
         15 => {
             undisplay_px(&CENTER, display_pins);
             if let Some(winner) = dot_game_spiral(dot, buttons) {
                 return Some(winner);
             }
-            display_px(&dot.px(), display_pins);
+            display_px(dot.px(), display_pins);
         }
         _ => (),
     }
