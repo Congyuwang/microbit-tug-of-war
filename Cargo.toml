@@ -4,6 +4,11 @@ version = "0.1.0"
 authors = ["Congyu Wang <leonwang998@gmail.com>"]
 edition = "2021"
 
+[[bin]]
+name = "tug-of-war"
+test = false
+bench = false
+
 [dependencies.microbit-v2]
 version = "0.12.0"
 
