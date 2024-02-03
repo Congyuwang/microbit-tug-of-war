@@ -64,7 +64,7 @@ fn main() -> ! {
         board.NVIC,
     );
     loop {
-        cortex_m::asm::wfe();
+        cortex_m::asm::wfi();
     }
 }
 
