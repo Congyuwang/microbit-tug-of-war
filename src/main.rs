@@ -10,7 +10,6 @@ use microbit::{
     hal::{
         gpio::{p0::P0_00, Disconnected, PushPull},
         gpiote::Gpiote,
-        prelude::InputPin,
         rtc::RtcInterrupt,
         Clocks, Rng, Rtc,
     },
@@ -153,22 +152,7 @@ fn PWM0() {
 fn GPIOTE() {
     cortex_m::interrupt::free(|cs| {
         if let Some(device) = DEVICE.borrow(cs).borrow_mut().as_mut() {
-            let button_a = device.gpiote.channel0();
-            let button_b = device.gpiote.channel1();
-            if button_a.is_event_triggered() {
-                device.buttons.set_last_a();
-                if device.buttons.button_b.is_low().unwrap() {
-                    device.buttons.set_both_pressed();
-                }
-                button_a.reset_events();
-            }
-            if button_b.is_event_triggered() {
-                device.buttons.set_last_b();
-                if device.buttons.button_a.is_low().unwrap() {
-                    device.buttons.set_both_pressed();
-                }
-                button_b.reset_events();
-            }
+            device.buttons.handle_interrupt(&device.gpiote)
         }
     });
 }
