@@ -24,23 +24,8 @@ impl ButtonState {
     }
 
     #[inline]
-    pub fn set_both_pressed(&mut self) {
-        self.state |= BOTH_AB_MASK;
-    }
-
-    #[inline]
     pub fn both_pressed(&self) -> bool {
         self.state & BOTH_AB_MASK != 0
-    }
-
-    #[inline]
-    pub fn set_last_a(&mut self) {
-        self.state &= !LAST_BUTTON_MASK;
-    }
-
-    #[inline]
-    pub fn set_last_b(&mut self) {
-        self.state |= LAST_BUTTON_MASK;
     }
 
     #[inline]
@@ -51,6 +36,21 @@ impl ButtonState {
     #[inline]
     pub fn reset(&mut self) {
         self.state = 0
+    }
+
+    #[inline]
+    fn set_last_a(&mut self) {
+        self.state &= !LAST_BUTTON_MASK;
+    }
+
+    #[inline]
+    fn set_last_b(&mut self) {
+        self.state |= LAST_BUTTON_MASK;
+    }
+
+    #[inline]
+    fn set_both_pressed(&mut self) {
+        self.state |= BOTH_AB_MASK;
     }
 
     pub fn handle_interrupt(&mut self, gpiote: &Gpiote) {

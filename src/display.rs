@@ -1,6 +1,7 @@
 use crate::DisplayPinsArray;
 use microbit::hal::prelude::OutputPin as _;
 
+#[inline]
 pub fn display_px((x, y): &(u8, u8), (cols, rows): &mut DisplayPinsArray) {
     rows[*x as usize].set_high().unwrap();
     cols[*y as usize].set_low().unwrap();
@@ -12,6 +13,7 @@ pub fn undisplay_px((x, y): &(u8, u8), (cols, rows): &mut DisplayPinsArray) {
     cols[*y as usize].set_high().unwrap();
 }
 
+#[inline]
 pub fn display_col(col: u8, col_code: u8, (cols, rows): &mut DisplayPinsArray) {
     cols[col as usize].set_low().unwrap();
     IntoIterator::into_iter([0b00001, 0b00010, 0b00100, 0b01000, 0b10000])
@@ -23,6 +25,7 @@ pub fn display_col(col: u8, col_code: u8, (cols, rows): &mut DisplayPinsArray) {
         })
 }
 
+#[inline]
 pub fn undisplay_col(col: u8, (cols, rows): &mut DisplayPinsArray) {
     cols[col as usize].set_high().unwrap();
     rows.iter_mut().for_each(|row| row.set_low().unwrap());

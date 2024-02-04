@@ -149,7 +149,7 @@ enum AudioState {
 }
 
 impl AudioState {
-    pub fn new(pwm: PWM0, speaker: Pin<Disconnected>) -> Self {
+    fn new(pwm: PWM0, speaker: Pin<Disconnected>) -> Self {
         Self::Disconnected {
             pwm: pwm::Pwm::new(pwm),
             speaker,
@@ -157,7 +157,8 @@ impl AudioState {
     }
 
     /// Set track and swtich to playing.
-    pub fn set_track(self, notes: Notes) -> Self {
+    #[inline]
+    fn set_track(self, notes: Notes) -> Self {
         if let Self::Idle { pwm } = self {
             Self::Playing {
                 pwm,
@@ -169,7 +170,8 @@ impl AudioState {
     }
 
     /// Stop pwm, unset track and switch to idle.
-    pub fn stop(self) -> Self {
+    #[inline]
+    fn stop(self) -> Self {
         if let AudioState::Playing { pwm, track: _ } = self {
             pwm.stop();
             AudioState::Idle { pwm }
@@ -181,7 +183,8 @@ impl AudioState {
     /// Connect speaker pin to pwm generator.
     ///
     /// Switch from Disconnected to Idle
-    pub fn connect(self) -> Self {
+    #[inline]
+    fn connect(self) -> Self {
         if let Self::Disconnected { pwm, speaker } = self {
             let speaker = speaker.into_push_pull_output(Level::Low);
             Self::enable(&pwm, speaker);
@@ -194,7 +197,8 @@ impl AudioState {
     /// Disconnect speaker pin to save power.
     ///
     /// Switch from Idle to disconnected.
-    pub fn disconnect(self) -> Self {
+    #[inline]
+    fn disconnect(self) -> Self {
         if let AudioState::Idle { mut pwm } = self {
             pwm.disable();
             let speaker = pwm.clear_output_pin(CHANNEL).unwrap().into_disconnected();
@@ -218,6 +222,7 @@ impl AudioState {
     /// Won't do anything if currently not 'Playing'.
     ///
     /// return (self, done)
+    #[inline]
     fn play_next_note(self) -> (Self, bool) {
         if let Self::Playing { pwm, mut track } = self {
             if let Some(note) = track.next_note() {
@@ -232,6 +237,7 @@ impl AudioState {
     }
 
     /// Silent note is treated differently with refresh instead of loop.
+    #[inline]
     fn play_note(pwm: pwm::Pwm<PWM0>, (note, t_ms): Note) -> pwm::Pwm<PWM0> {
         let repeat = Self::loops(t_ms, note.len());
         if note == SI {

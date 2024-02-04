@@ -61,6 +61,7 @@ fn clear_countdown_display(display_pins: &mut DisplayPinsArray) {
     undisplay_col(4, display_pins);
 }
 
+#[inline]
 fn display_countdown_col(col: u8, col_code: u8, display_pins: &mut DisplayPinsArray) {
     undisplay_col(col_to_undisplay(col), display_pins);
     display_col(col, col_code, display_pins);

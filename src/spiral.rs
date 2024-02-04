@@ -78,9 +78,9 @@ impl DotState {
     /// must call `toggle_clockwise` in center_cb
     /// before calling `spiral` again.
     /// Otherwise, the code might panic.
+    #[inline]
     pub fn spiral<CB: FnMut(&mut Self)>(&mut self, mut center_cb: CB) {
-        let pos = self.pos();
-        if let LEFT | RIGHT = pos {
+        if let LEFT | RIGHT = self.pos() {
             center_cb(self)
         }
         self.next();
