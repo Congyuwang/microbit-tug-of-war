@@ -41,11 +41,10 @@ type DisplayPinsArray = (
 
 /// Devices used for the game.
 struct Device {
-    display: DisplayPinsArray,
     buttons: ButtonState,
-    gpiote: Gpiote,
-    rng: Rng,
+    display: DisplayPinsArray,
     sound: Sound,
+    rng: Rng,
 }
 
 #[entry]
@@ -101,30 +100,20 @@ fn init_device(
         NVIC::unmask(interrupt::GPIOTE);
         NVIC::unmask(interrupt::PWM0);
     }
-    // enable gpiote for buttons
-    let gpiote = Gpiote::new(gpiote);
-    let button_a = buttons.button_a.degrade();
-    let button_b = buttons.button_b.degrade();
-    gpiote
-        .channel0()
-        .input_pin(&button_a)
-        .hi_to_lo()
-        .enable_interrupt();
-    gpiote
-        .channel1()
-        .input_pin(&button_b)
-        .hi_to_lo()
-        .enable_interrupt();
-    let buttons = ButtonState::new(button_a, button_b);
-    // prepare sound object
+    let buttons = ButtonState::new(
+        buttons.button_a.degrade(),
+        buttons.button_b.degrade(),
+        Gpiote::new(gpiote),
+    );
+    let display = display.degrade();
     let sound = Sound::new(pwm, speaker.degrade());
+    let rng = Rng::new(rng);
     cortex_m::interrupt::free(|cs| {
         DEVICE.borrow(cs).borrow_mut().replace(Device {
-            display: display.degrade(),
             buttons,
-            gpiote,
-            rng: Rng::new(rng),
+            display,
             sound,
+            rng,
         });
     });
 }
@@ -152,7 +141,7 @@ fn PWM0() {
 fn GPIOTE() {
     cortex_m::interrupt::free(|cs| {
         if let Some(device) = DEVICE.borrow(cs).borrow_mut().as_mut() {
-            device.buttons.handle_interrupt(&device.gpiote)
+            device.buttons.handle_interrupt()
         }
     });
 }
