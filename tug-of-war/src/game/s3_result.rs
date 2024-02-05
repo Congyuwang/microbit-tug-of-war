@@ -28,7 +28,7 @@ pub fn result_animation(
 
     // update states
     // 256HZ * 256 = 1s
-    *cnt += 1;
+    *cnt = cnt.wrapping_add(1);
 
     if *cnt == 255 {
         buttons.reset();

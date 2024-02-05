@@ -103,8 +103,8 @@ impl DotState {
 
     #[inline]
     fn next(&mut self) {
-        self.0 += self.is_clockwise() as i8;
-        self.0 -= !self.is_clockwise() as i8;
+        self.0 = self.0.wrapping_add(self.is_clockwise() as i8);
+        self.0 = self.0.wrapping_sub(!self.is_clockwise() as i8);
     }
 
     #[inline]

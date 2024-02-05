@@ -5,7 +5,7 @@ use microbit::{
 };
 
 use self::s2_game::Players;
-use crate::{sound::Sound, Device, DotState, DI_HI, PEPPA};
+use crate::{sound::Sound, ButtonState, Device, DotState, DI_HI, PEPPA};
 
 mod s0_idle;
 mod s1_ready;
@@ -47,7 +47,7 @@ impl Game {
                 ) {
                     device.buttons.reset();
                     // Ready -> Playing (reset buttons)
-                    *self = Self::playing(&mut device.rng, &mut device.sound);
+                    *self = Self::playing(&mut device.rng, &mut device.buttons, &mut device.sound);
                 }
             }
             Game::Playing { dot, cnt } => {
@@ -80,11 +80,16 @@ impl Game {
         }
     }
 
-    fn playing(rng: &mut Rng, sound: &mut Sound) -> Self {
+    fn playing(rng: &mut Rng, buttons: &mut ButtonState, sound: &mut Sound) -> Self {
         let mut dot = DotState::new();
-        if let 0..=127 = rng.random_u8() {
+        let rand_num = rng.random_u8();
+        crate::debug::info!("rand seed = {}", rand_num);
+        if let 0..=127 = rand_num {
             dot.toggle_clockwise();
+            buttons.set_last_a();
+            crate::debug::info!("starting clockwise toggled");
         }
+        crate::debug::info!("starting clockwise = {}", dot.is_clockwise());
         sound.play_track(&DI_HI);
         Game::Playing {
             dot,
