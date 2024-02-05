@@ -19,13 +19,10 @@ struct Track {
 
 impl Track {
     fn next_note(&mut self) -> Option<Note> {
-        match self.notes.get(self.position) {
-            Some(note) => {
-                self.position += 1;
-                Some(*note)
-            }
-            None => None,
-        }
+        self.notes.get(self.position).map(|note| {
+            self.position += 1;
+            *note
+        })
     }
 }
 
