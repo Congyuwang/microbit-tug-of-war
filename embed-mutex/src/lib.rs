@@ -23,7 +23,7 @@ enum MutexInnerState {
     Unlock,
 }
 
-pub struct LockGaurd<'cs, T>(&'cs mut MutexInner<T>);
+pub struct LockGuard<'cs, T>(&'cs mut MutexInner<T>);
 
 impl<T> Mutex<T> {
     /// Creates a new mutex.
@@ -56,13 +56,13 @@ impl<T> Mutex<T> {
     }
 
     /// Try to lock the mutex.
-    pub fn try_lock<'cs>(&'cs self, _cs: &'cs CriticalSection) -> Option<LockGaurd<'cs, T>> {
+    pub fn try_lock<'cs>(&'cs self, _cs: &'cs CriticalSection) -> Option<LockGuard<'cs, T>> {
         let inner = unsafe { &mut *self.0.get() };
         match inner.state {
             MutexInnerState::Uinit | MutexInnerState::Locked => None,
             MutexInnerState::Unlock => {
                 inner.state = MutexInnerState::Locked;
-                Some(LockGaurd(inner))
+                Some(LockGuard(inner))
             }
         }
     }
@@ -77,7 +77,7 @@ impl<T> Drop for Mutex<T> {
     }
 }
 
-impl<'cs, T> Deref for LockGaurd<'cs, T> {
+impl<'cs, T> Deref for LockGuard<'cs, T> {
     type Target = T;
 
     #[inline]
@@ -86,14 +86,14 @@ impl<'cs, T> Deref for LockGaurd<'cs, T> {
     }
 }
 
-impl<'cs, T> DerefMut for LockGaurd<'cs, T> {
+impl<'cs, T> DerefMut for LockGuard<'cs, T> {
     #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {
         unsafe { self.0.value.assume_init_mut() }
     }
 }
 
-impl<'cs, T> Drop for LockGaurd<'cs, T> {
+impl<'cs, T> Drop for LockGuard<'cs, T> {
     fn drop(&mut self) {
         self.0.state = MutexInnerState::Unlock;
     }
