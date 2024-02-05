@@ -10,7 +10,7 @@ use crate::{Note, Notes};
 
 const MAX_DUTY: u16 = 256;
 const SAMPLE_FREQ: u16 = 62500;
-const CHANNEL: microbit::hal::pwm::Channel = microbit::hal::pwm::Channel::C0;
+const CHANNEL: pwm::Channel = pwm::Channel::C0;
 
 struct Track {
     notes: Notes,
@@ -18,10 +18,6 @@ struct Track {
 }
 
 impl Track {
-    fn new(notes: Notes) -> Self {
-        Self { notes, position: 0 }
-    }
-
     fn next_note(&mut self) -> Option<Note> {
         match self.notes.get(self.position) {
             Some(note) => {
@@ -40,7 +36,6 @@ pub struct Sound {
 
 enum AudioState {
     Disconnected { speaker: Pin<Disconnected> },
-    Idle,
     Playing { track: Track },
 }
 
@@ -64,25 +59,32 @@ impl Sound {
 
     /// set track and start playing.
     /// If currently playing, stop this track.
-    pub fn play_track(&mut self, track: Notes) {
-        // stop the playing track.
-        if let AudioState::Playing { .. } = self.state {
-            self.stop();
+    pub fn play_track(&mut self, notes: Notes) {
+        // set new state to Playing
+        let state = core::mem::replace(
+            &mut self.state,
+            AudioState::Playing {
+                track: Track { notes, position: 1 },
+            },
+        );
+        // previous state
+        match state {
+            AudioState::Playing { .. } => {
+                // restart pwm to completely stop previous track.
+                self.pwm_mut().disable();
+                self.pwm_mut().enable();
+                crate::debug::info!("speaker re-enabled");
+            }
+            AudioState::Disconnected { speaker } => {
+                // connect speaker if disconnected
+                let speaker = speaker.into_push_pull_output(Level::Low);
+                self.pwm_mut().set_output_pin(CHANNEL, speaker).enable();
+                crate::debug::info!("speaker connected");
+            }
         }
-
-        // if disconnected, connect.
-        // if idle, set track.
-        // if track set, play next note.
-        loop {
-            match self.state {
-                AudioState::Disconnected { .. } => self.connect(),
-                AudioState::Idle { .. } => self.set_track(track),
-                AudioState::Playing { .. } => {
-                    self.play_next_note();
-                    break;
-                }
-            };
-        }
+        // play the first note
+        let pwm = self.pwm.take().unwrap();
+        self.pwm.replace(Self::play_note(pwm, notes[0]));
     }
 
     /// handles LOOPS_DONE event.
@@ -90,96 +92,23 @@ impl Sound {
         // reset event
         self.pwm_mut().reset_event(pwm::PwmEvent::LoopsDone);
 
-        // LOOPS_DONE
-
-        // if track unfinished, play next note.
-        // if track finished, stop playing.
-        // if idle, disconnect.
-        // if disconnected, do nothing.
-        loop {
-            match self.state {
-                AudioState::Playing { .. } => {
-                    if self.play_next_note() {
-                        self.stop();
-                        // go on to execute disconnect
-                    } else {
-                        break;
-                    }
-                }
-                AudioState::Idle { .. } => {
-                    self.disconnect();
-                    break;
-                }
-                AudioState::Disconnected { .. } => break,
-            };
+        if let AudioState::Playing { track } = &mut self.state {
+            if Self::play_next_note(track, &mut self.pwm) {
+                self.disconnect();
+            }
         }
     }
 
-    /// Set track and swtich to playing.
-    ///
-    /// Switch from Idle to Playing.
-    #[inline]
-    fn set_track(&mut self, notes: Notes) {
-        if let AudioState::Idle = self.state {
-            self.state = AudioState::Playing {
-                track: Track::new(notes),
-            };
-            crate::debug::info!("track set");
-        } else {
-            unreachable!()
-        }
-    }
-
-    /// Stop pwm, unset track and switch to idle.
-    ///
-    /// Switch from Playing to Idle.
-    #[inline]
-    fn stop(&mut self) {
-        if let AudioState::Playing { track: _ } = self.state {
-            self.pwm_mut().stop();
-            self.pwm_mut().disable();
-            self.pwm_mut().enable();
-            self.state = AudioState::Idle;
-            crate::debug::info!("sound stopped");
-        } else {
-            unreachable!()
-        }
-    }
-
-    /// Connect speaker pin to pwm generator.
-    ///
-    /// Switch from Disconnected to Idle.
-    #[inline]
-    fn connect(&mut self) {
-        let state = core::mem::replace(&mut self.state, AudioState::Idle);
-        if let AudioState::Disconnected { speaker } = state {
-            let speaker = speaker.into_push_pull_output(Level::Low);
-            self.pwm_mut()
-                .set_output_pin(pwm::Channel::C0, speaker)
-                .enable();
-            crate::debug::info!("speaker connected");
-        } else {
-            unreachable!()
-        }
-    }
-
-    /// Disconnect speaker pin to save power.
-    ///
-    /// Switch from Idle to Disconnected.
     #[inline]
     fn disconnect(&mut self) {
-        if let AudioState::Idle = self.state {
-            self.pwm_mut().disable();
-            let speaker = self
-                .pwm_mut()
-                .clear_output_pin(CHANNEL)
-                .unwrap()
-                .into_disconnected();
-            self.state = AudioState::Disconnected { speaker };
-            crate::debug::info!("speaker disconnected");
-        } else {
-            unreachable!()
-        }
+        self.pwm_mut().disable();
+        let speaker = self
+            .pwm_mut()
+            .clear_output_pin(CHANNEL)
+            .unwrap()
+            .into_disconnected();
+        self.state = AudioState::Disconnected { speaker };
+        crate::debug::info!("speaker disconnected");
     }
 
     /// Play next note.
@@ -188,23 +117,14 @@ impl Sound {
     ///
     /// return done: bool
     #[inline]
-    fn play_next_note(&mut self) -> bool {
-        if let AudioState::Playing { track } = &mut self.state {
-            if let Some(note) = track.next_note() {
-                let pwm = self.pwm.take().unwrap();
-                self.pwm.replace(Self::play_note(pwm, note));
-                false
-            } else {
-                true
-            }
+    fn play_next_note(track: &mut Track, pwm: &mut Option<pwm::Pwm<PWM0>>) -> bool {
+        if let Some(note) = track.next_note() {
+            let pwm_inner = pwm.take().unwrap();
+            pwm.replace(Self::play_note(pwm_inner, note));
+            false
         } else {
-            unreachable!()
+            true
         }
-    }
-
-    #[inline]
-    fn pwm_mut(&mut self) -> &mut pwm::Pwm<PWM0> {
-        self.pwm.as_mut().unwrap()
     }
 
     /// Silent note is treated differently with refresh instead of loop.
@@ -214,6 +134,11 @@ impl Sound {
         let (s0, s1) = note.split_at(note.len() / 2);
         let (_, _, pwm) = pwm.load(Some(s0), Some(s1), true).unwrap().split();
         pwm
+    }
+
+    #[inline]
+    fn pwm_mut(&mut self) -> &mut pwm::Pwm<PWM0> {
+        self.pwm.as_mut().unwrap()
     }
 
     #[inline]
