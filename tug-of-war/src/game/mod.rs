@@ -1,12 +1,13 @@
 //! The state machine of the main game.
-
-use cortex_m::interrupt::CriticalSection;
-use microbit::hal::{rtc::RtcInterrupt, Rng};
+use microbit::{
+    hal::{rtc::RtcInterrupt, Rng, Rtc},
+    pac::RTC0,
+};
 
 use self::s2_game::Players;
 use crate::{
     sound::{Sound, DI_HI, PEPPA},
-    DotState, DEVICE, RTC,
+    Device, DotState,
 };
 
 mod s0_idle;
@@ -31,13 +32,8 @@ impl Game {
         }
     }
 
-    pub fn poll(&mut self, cs: &CriticalSection) {
-        Self::reset_rtc(cs);
-        let mut device_borrow = DEVICE.borrow(cs).borrow_mut();
-        let device = match device_borrow.as_mut() {
-            Some(device) => device,
-            None => return,
-        };
+    pub fn poll(&mut self, rtc: &mut Rtc<RTC0>, device: &mut Device) {
+        rtc.reset_event(RtcInterrupt::Tick);
         match self {
             Game::IdleAnimation { cnt, dot } => {
                 if s0_idle::idle_animation(cnt, dot, &device.buttons, &mut device.display) {
@@ -102,11 +98,5 @@ impl Game {
     fn result(winner: Players, sound: &mut Sound) -> Self {
         sound.play_track(&PEPPA);
         Game::Result { cnt: 0, winner }
-    }
-
-    fn reset_rtc(cs: &CriticalSection) {
-        if let Some(rtc) = RTC.borrow(cs).borrow_mut().as_mut() {
-            rtc.reset_event(RtcInterrupt::Tick)
-        }
     }
 }

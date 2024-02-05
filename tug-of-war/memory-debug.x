@@ -22,6 +22,6 @@ SECTIONS
 
   /DISCARD/ :
   {
-    *(.ARM.exidx .ARM.exidx.*);
+    *(.ARM.attributes .debug* .comment);
   }
 }

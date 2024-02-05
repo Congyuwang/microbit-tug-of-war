@@ -12,13 +12,18 @@ use std::fs::File;
 use std::io::Write;
 use std::path::PathBuf;
 
+#[cfg(debug_assertions)]
+const MEMORY_X: &[u8] = include_bytes!("memory-debug.x");
+#[cfg(not(debug_assertions))]
+const MEMORY_X: &[u8] = include_bytes!("memory.x");
+
 fn main() {
     // Put `memory.x` in our output directory and ensure it's
     // on the linker search path.
     let out = &PathBuf::from(env::var_os("OUT_DIR").unwrap());
     File::create(out.join("memory.x"))
         .unwrap()
-        .write_all(include_bytes!("memory.x"))
+        .write_all(MEMORY_X)
         .unwrap();
     println!("cargo:rustc-link-search={}", out.display());
 

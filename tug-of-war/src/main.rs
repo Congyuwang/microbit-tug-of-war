@@ -1,7 +1,5 @@
 #![no_main]
 #![no_std]
-use core::cell::RefCell;
-use cortex_m::interrupt::Mutex;
 use cortex_m_rt::entry;
 use game::Game;
 use microbit::{
@@ -16,9 +14,12 @@ use microbit::{
     pac::{interrupt, CLOCK, GPIOTE, NVIC, PWM0, RNG, RTC0},
     Board,
 };
+#[cfg(not(debug_assertions))]
 use panic_halt as _;
-// use panic_rtt_target as _;
-// use rtt_target::rtt_init_print;
+#[cfg(debug_assertions)]
+use panic_rtt_target as _;
+#[cfg(debug_assertions)]
+use rtt_target::rtt_init_print;
 
 mod buttons;
 mod display;
@@ -27,12 +28,13 @@ mod sound;
 mod spiral;
 use buttons::*;
 use display::*;
-use sound::Sound;
+use embed_mutex::*;
+use sound::*;
 use spiral::*;
 
-static RTC: Mutex<RefCell<Option<Rtc<RTC0>>>> = Mutex::new(RefCell::new(None));
-static GAME: Mutex<RefCell<Game>> = Mutex::new(RefCell::new(Game::new()));
-static DEVICE: Mutex<RefCell<Option<Device>>> = Mutex::new(RefCell::new(None));
+static RTC: Mutex<Rtc<RTC0>> = Mutex::new_uinit();
+static GAME: Mutex<Game> = Mutex::new(Game::new());
+static DEVICE: Mutex<Device> = Mutex::new_uinit();
 
 type DisplayPinsArray = (
     [microbit::hal::gpio::Pin<microbit::hal::gpio::Output<PushPull>>; NUM_COLS],
@@ -49,7 +51,8 @@ struct Device {
 
 #[entry]
 fn main() -> ! {
-    // rtt_init_print!();
+    #[cfg(debug_assertions)]
+    rtt_init_print!();
     let board = Board::take().unwrap();
     init_rtc(board.CLOCK, board.RTC0);
     init_device(
@@ -76,9 +79,7 @@ fn init_rtc(clock: CLOCK, rtc0: RTC0) {
     rtc0.enable_event(RtcInterrupt::Tick);
     rtc0.enable_interrupt(RtcInterrupt::Tick, None);
     rtc0.enable_counter();
-    cortex_m::interrupt::free(|cs| {
-        RTC.borrow(cs).borrow_mut().replace(rtc0);
-    });
+    cortex_m::interrupt::free(|cs| RTC.init(cs, rtc0));
 }
 
 /// initialize DEVICE variable.
@@ -109,12 +110,15 @@ fn init_device(
     let sound = Sound::new(pwm, speaker.degrade());
     let rng = Rng::new(rng);
     cortex_m::interrupt::free(|cs| {
-        DEVICE.borrow(cs).borrow_mut().replace(Device {
-            buttons,
-            display,
-            sound,
-            rng,
-        });
+        DEVICE.init(
+            cs,
+            Device {
+                buttons,
+                display,
+                sound,
+                rng,
+            },
+        )
     });
 }
 
@@ -122,7 +126,11 @@ fn init_device(
 #[interrupt]
 fn RTC0() {
     cortex_m::interrupt::free(|cs| {
-        GAME.borrow(cs).borrow_mut().poll(cs);
+        if let (Some(mut device), Some(mut rtc), Some(mut game)) =
+            (DEVICE.try_lock(cs), RTC.try_lock(cs), GAME.try_lock(cs))
+        {
+            game.poll(&mut rtc, &mut device);
+        }
     });
 }
 
@@ -130,7 +138,7 @@ fn RTC0() {
 #[interrupt]
 fn PWM0() {
     cortex_m::interrupt::free(|cs| {
-        if let Some(device) = DEVICE.borrow(cs).borrow_mut().as_mut() {
+        if let Some(mut device) = DEVICE.try_lock(cs) {
             device.sound.handle_interrupt();
         }
     });
@@ -140,8 +148,8 @@ fn PWM0() {
 #[interrupt]
 fn GPIOTE() {
     cortex_m::interrupt::free(|cs| {
-        if let Some(device) = DEVICE.borrow(cs).borrow_mut().as_mut() {
-            device.buttons.handle_interrupt()
+        if let Some(mut device) = DEVICE.try_lock(cs) {
+            device.buttons.handle_interrupt();
         }
     });
 }

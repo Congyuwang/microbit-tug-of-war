@@ -102,6 +102,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7a81dae078cea95a014a339291cec439d2f232ebe854a9d672b796c6afafa9b7"
 
 [[package]]
+name = "embed-mutex"
+version = "0.1.0"
+dependencies = [
+ "cortex-m",
+]
+
+[[package]]
 name = "embedded-dma"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -341,6 +348,7 @@ version = "0.1.1"
 dependencies = [
  "cortex-m",
  "cortex-m-rt",
+ "embed-mutex",
  "microbit-v2",
  "panic-halt",
  "panic-rtt-target",

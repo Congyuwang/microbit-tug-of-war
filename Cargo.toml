@@ -1,29 +1,9 @@
-[package]
-name = "tug-of-war"
-version = "0.1.1"
-authors = ["Congyu Wang <leonwang998@gmail.com>"]
-edition = "2021"
-
-[[bin]]
-name = "tug-of-war"
-test = false
-bench = false
-
-[dependencies.microbit-v2]
-version = "0.12.0"
-
-[dependencies]
-cortex-m = "0.7.3"
-cortex-m-rt = "0.7.0"
-panic-halt = "0.2.0"
-# rtt-target = { version = "0.3.1", features = ["cortex-m"] }
-# panic-rtt-target = { version = "0.1.2", features = ["cortex-m"] }
-
-[dev-dependencies]
-# Sneak in dependencies for examples which clash with panic-hal when generating
-# docs with rustdoc.
-rtt-target = { version = "0.3.1", features = ["cortex-m"] }
-panic-rtt-target = { version = "0.1.2", features = ["cortex-m"] }
+[workspace]
+members = [
+    "embed-mutex",
+    "tug-of-war",
+]
+resolver = "2"
 
 [profile.release]
 codegen-units = 1

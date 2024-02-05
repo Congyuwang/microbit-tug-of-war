@@ -70,18 +70,29 @@ impl ButtonState {
     }
 
     pub fn handle_interrupt(&mut self) {
+        #[cfg(debug_assertions)]
+        use rtt_target::rprintln;
+
         let button_a = self.gpiote.channel0();
         let button_b = self.gpiote.channel1();
         if button_a.is_event_triggered() {
+            #[cfg(debug_assertions)]
+            rprintln!("button A");
             Self::set_last_a(&mut self.state);
             if self.button_b.is_low().unwrap() {
+                #[cfg(debug_assertions)]
+                rprintln!("button A & B");
                 Self::set_both_pressed(&mut self.state);
             }
             button_a.reset_events();
         }
         if button_b.is_event_triggered() {
+            #[cfg(debug_assertions)]
+            rprintln!("button B");
             Self::set_last_b(&mut self.state);
             if self.button_a.is_low().unwrap() {
+                #[cfg(debug_assertions)]
+                rprintln!("button A & B");
                 Self::set_both_pressed(&mut self.state);
             }
             button_b.reset_events();
