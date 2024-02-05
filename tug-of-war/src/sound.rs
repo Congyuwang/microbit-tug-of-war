@@ -143,6 +143,7 @@ impl Sound {
 
     #[inline]
     fn loops(t_ms: u16, sample_len: usize) -> u16 {
-        (t_ms as u32 * SAMPLE_FREQ as u32 / 1000_u32 / sample_len as u32).max(1) as u16
+        // always >= 1.
+        (t_ms as u32 * SAMPLE_FREQ as u32 / 1000_u32 / sample_len as u32) as u16
     }
 }
