@@ -1,8 +1,4 @@
-use crate::{
-    display_col,
-    sound::{Sound, DI_LO},
-    undisplay_col, DisplayPinsArray,
-};
+use crate::{display_col, sound::Sound, undisplay_col, DisplayPinsArray, DI_LO};
 
 /// by columns
 const THREE: [u8; 4] = [0b01001, 0b10001, 0b10101, 0b01011];
