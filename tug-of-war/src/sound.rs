@@ -60,11 +60,16 @@ impl Sound {
     /// set track and start playing.
     /// If currently playing, stop this track.
     pub fn play_track(&mut self, notes: Notes) {
+        // initialize to 1 since note[0] is immediately triggered.
+        const INIT_PLAY_POS: usize = 1;
         // set new state to Playing
         let state = core::mem::replace(
             &mut self.state,
             AudioState::Playing {
-                track: Track { notes, position: 1 },
+                track: Track {
+                    notes,
+                    position: INIT_PLAY_POS,
+                },
             },
         );
         // previous state
