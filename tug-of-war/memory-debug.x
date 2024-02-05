@@ -19,9 +19,4 @@ SECTIONS
   {
     *(.notes);
   } > RAM
-
-  /DISCARD/ :
-  {
-    *(.ARM.attributes .debug* .comment);
-  }
 }
