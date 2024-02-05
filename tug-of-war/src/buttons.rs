@@ -46,7 +46,7 @@ impl ButtonState {
 
     #[inline]
     pub fn last_a(&self) -> bool {
-        self.state & LAST_BUTTON_MASK == 0
+        self.state & LAST_BUTTON_MASK != 0
     }
 
     #[inline]
@@ -55,40 +55,41 @@ impl ButtonState {
     }
 
     #[inline]
-    fn set_last_a(state: &mut u8) {
-        *state &= !LAST_BUTTON_MASK;
+    pub fn set_last_a(&mut self) {
+        self.state |= LAST_BUTTON_MASK;
     }
 
     #[inline]
-    fn set_last_b(state: &mut u8) {
-        *state |= LAST_BUTTON_MASK;
+    fn set_last_b(&mut self) {
+        self.state &= !LAST_BUTTON_MASK;
     }
 
     #[inline]
-    fn set_both_pressed(state: &mut u8) {
-        *state |= BOTH_AB_MASK;
+    fn set_both_pressed(&mut self) {
+        self.state |= BOTH_AB_MASK;
     }
 
     pub fn handle_interrupt(&mut self) {
         let button_a = self.gpiote.channel0();
-        let button_b = self.gpiote.channel1();
         if button_a.is_event_triggered() {
+            button_a.reset_events();
             crate::debug::info!("button A");
-            Self::set_last_a(&mut self.state);
+            self.set_last_a();
             if self.button_b.is_low().unwrap() {
                 crate::debug::info!("button A + B");
-                Self::set_both_pressed(&mut self.state);
+                self.set_both_pressed();
             }
-            button_a.reset_events();
-        }
-        if button_b.is_event_triggered() {
-            crate::debug::info!("button B");
-            Self::set_last_b(&mut self.state);
-            if self.button_a.is_low().unwrap() {
-                crate::debug::info!("button A + B");
-                Self::set_both_pressed(&mut self.state);
+        } else {
+            let button_b = self.gpiote.channel1();
+            if button_b.is_event_triggered() {
+                button_b.reset_events();
+                crate::debug::info!("button B");
+                self.set_last_b();
+                if self.button_a.is_low().unwrap() {
+                    crate::debug::info!("button A + B");
+                    self.set_both_pressed();
+                }
             }
-            button_b.reset_events();
         }
     }
 }
