@@ -22,6 +22,7 @@ use panic_rtt_target as _;
 use rtt_target::rtt_init_print;
 
 mod buttons;
+mod debug;
 mod display;
 mod game;
 mod notes;
@@ -66,6 +67,7 @@ fn main() -> ! {
         board.PWM0,
         board.NVIC,
     );
+    crate::debug::info!("device initialized");
     loop {
         cortex_m::asm::wfi();
     }

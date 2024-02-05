@@ -124,6 +124,7 @@ impl Sound {
             self.state = AudioState::Playing {
                 track: Track::new(notes),
             };
+            crate::debug::info!("track set");
         } else {
             unreachable!()
         }
@@ -139,6 +140,7 @@ impl Sound {
             self.pwm_mut().disable();
             self.pwm_mut().enable();
             self.state = AudioState::Idle;
+            crate::debug::info!("sound stopped");
         } else {
             unreachable!()
         }
@@ -155,6 +157,7 @@ impl Sound {
             self.pwm_mut()
                 .set_output_pin(pwm::Channel::C0, speaker)
                 .enable();
+            crate::debug::info!("speaker connected");
         } else {
             unreachable!()
         }
@@ -173,6 +176,7 @@ impl Sound {
                 .unwrap()
                 .into_disconnected();
             self.state = AudioState::Disconnected { speaker };
+            crate::debug::info!("speaker disconnected");
         } else {
             unreachable!()
         }
