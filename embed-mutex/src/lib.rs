@@ -44,7 +44,7 @@ impl<T> Mutex<T> {
 
     /// Value initialization.
     ///
-    /// panic if already initalized.
+    /// panic if already initialized.
     pub fn init<'cs>(&'cs self, _cs: &'cs CriticalSection, value: T) {
         let inner = unsafe { &mut *self.0.get() };
         if let MutexInnerState::Uinit = inner.state {
