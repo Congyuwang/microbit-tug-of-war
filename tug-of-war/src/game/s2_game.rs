@@ -59,6 +59,8 @@ fn dot_game_spiral(dot: &mut DotState, buttons: &ButtonState) -> Option<Players>
         } else {
             result = Some(Players::B)
         }
+        // toggle to prevent overflow
+        dot.toggle_clockwise();
     });
 
     result

@@ -93,7 +93,7 @@ impl DotState {
 
     #[inline]
     pub fn is_clockwise(&self) -> bool {
-        (self.0 & CLOCKWISE_MASK) == 0
+        self.0 >= 0
     }
 
     #[inline]
@@ -103,8 +103,8 @@ impl DotState {
 
     #[inline]
     fn next(&mut self) {
-        self.0 = self.0.wrapping_add(self.is_clockwise() as i8);
-        self.0 = self.0.wrapping_sub(!self.is_clockwise() as i8);
+        self.0 += self.is_clockwise() as i8;
+        self.0 -= !self.is_clockwise() as i8;
     }
 
     #[inline]

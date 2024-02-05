@@ -35,12 +35,8 @@ pub fn ready_animation(
 
     // update states
     // 256HZ * 256 = 1s
-    if *cnt == u8::MAX {
-        *count_down -= 1;
-        *cnt = 0;
-    } else {
-        *cnt += 1;
-    }
+    *count_down -= (*cnt == u8::MAX) as u8;
+    *cnt = cnt.wrapping_add(1);
 
     // count down finished
     if *count_down == 0 {
