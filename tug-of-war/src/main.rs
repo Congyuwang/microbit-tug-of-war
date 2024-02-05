@@ -24,11 +24,13 @@ use rtt_target::rtt_init_print;
 mod buttons;
 mod display;
 mod game;
+mod notes;
 mod sound;
 mod spiral;
 use buttons::*;
 use display::*;
 use embed_mutex::*;
+use notes::*;
 use sound::*;
 use spiral::*;
 
@@ -107,7 +109,7 @@ fn init_device(
         Gpiote::new(gpiote),
     );
     let display = display.degrade();
-    let sound = Sound::new(pwm, speaker.degrade());
+    let sound = Sound::init(pwm, speaker.degrade());
     let rng = Rng::new(rng);
     cortex_m::interrupt::free(|cs| {
         DEVICE.init(

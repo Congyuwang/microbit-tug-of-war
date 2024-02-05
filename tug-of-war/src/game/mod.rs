@@ -5,10 +5,7 @@ use microbit::{
 };
 
 use self::s2_game::Players;
-use crate::{
-    sound::{Sound, DI_HI, PEPPA},
-    Device, DotState,
-};
+use crate::{sound::Sound, Device, DotState, DI_HI, PEPPA};
 
 mod s0_idle;
 mod s1_ready;
