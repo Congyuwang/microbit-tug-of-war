@@ -14,10 +14,23 @@ mod s3_result;
 
 /// The state machine of the game.
 pub enum Game {
-    IdleAnimation { dot: DotState, cnt: i8 },
-    ReadyAnimation { count_down: u8, cnt: u8 },
-    Playing { dot: DotState, cnt: i8 },
-    Result { winner: Players, cnt: u16 },
+    IdleAnimation {
+        dot: DotState,
+        cnt: i8,
+    },
+    ReadyAnimation {
+        count_down: u8,
+        cnt: u8,
+    },
+    Playing {
+        dot: DotState,
+        cnt: i8,
+    },
+    Result {
+        winner: Players,
+        cnt: u8,
+        one_sec: bool,
+    },
 }
 
 impl Game {
@@ -58,10 +71,15 @@ impl Game {
                     *self = Self::result(winner, &mut device.sound);
                 }
             }
-            Game::Result { cnt, winner } => {
+            Game::Result {
+                cnt,
+                winner,
+                one_sec,
+            } => {
                 if s3_result::result_animation(
                     cnt,
                     winner,
+                    one_sec,
                     &mut device.buttons,
                     &mut device.display,
                 ) {
@@ -99,6 +117,10 @@ impl Game {
 
     fn result(winner: Players, sound: &mut Sound) -> Self {
         sound.play_track(&PEPPA);
-        Game::Result { cnt: 0, winner }
+        Game::Result {
+            cnt: 0,
+            winner,
+            one_sec: false,
+        }
     }
 }

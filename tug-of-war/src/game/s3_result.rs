@@ -11,17 +11,17 @@ const LAST_COL: u8 = 3;
 
 /// Returns whether both buttons are pressed.
 pub fn result_animation(
-    cnt: &mut u16,
+    cnt: &mut u8,
     winner: &Players,
+    one_sec: &mut bool,
     buttons: &mut ButtonState,
     display_pins: &mut DisplayPinsArray,
 ) -> bool {
-    let display_cycle = *cnt as u8;
     let player_b_wins = *winner as u8;
 
     // update screen
-    match display_cycle {
-        0..=127 => display_result_col(display_cycle, player_b_wins, display_pins),
+    match cnt {
+        0..=127 => display_result_col(*cnt, player_b_wins, display_pins),
         128 => undisplay_col(LAST_COL + player_b_wins, display_pins),
         _ => (),
     }
@@ -30,10 +30,13 @@ pub fn result_animation(
     // 256HZ * 256 = 1s
     *cnt = cnt.wrapping_add(1);
 
-    if *cnt == 255 {
+    if !*one_sec && *cnt == u8::MAX {
         buttons.reset();
-    } else if *cnt > 255 && buttons.both_pressed() {
-        clear_result_col(display_cycle, player_b_wins, display_pins);
+        *one_sec = true;
+    }
+
+    if *one_sec && buttons.both_pressed() {
+        clear_result_col(*cnt, player_b_wins, display_pins);
         return true;
     }
 
