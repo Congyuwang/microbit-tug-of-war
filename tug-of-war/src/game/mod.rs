@@ -47,7 +47,6 @@ impl Game {
         match self {
             Game::IdleAnimation { cnt, dot } => {
                 if s0_idle::idle_animation(cnt, dot, &device.buttons, &mut device.display) {
-                    // IdleAnimation -> ReadyAnimation
                     *self = Self::ready_animation();
                 }
             }
@@ -58,16 +57,12 @@ impl Game {
                     &mut device.display,
                     &mut device.sound,
                 ) {
-                    device.buttons.reset();
-                    // Ready -> Playing (reset buttons)
                     *self = Self::playing(&mut device.rng, &mut device.buttons, &mut device.sound);
                 }
             }
             Game::Playing { dot, cnt } => {
                 if let Some(winner) = s2_game::game(cnt, dot, &device.buttons, &mut device.display)
                 {
-                    // Playing -> Result
-                    // (buttons reset 1 sec afterwards within result_animation).
                     *self = Self::result(winner, &mut device.sound);
                 }
             }
@@ -83,7 +78,6 @@ impl Game {
                     &mut device.buttons,
                     &mut device.display,
                 ) {
-                    // Result -> ReadyAnimation
                     *self = Self::ready_animation()
                 }
             }
@@ -100,12 +94,10 @@ impl Game {
 
     fn playing(rng: &mut Rng, buttons: &mut ButtonState, sound: &mut Sound) -> Self {
         let mut dot = DotState::new();
-        let rand_num = rng.random_u8();
-        crate::debug::info!("rand seed = {}", rand_num);
-        if let 0..=127 = rand_num {
+        buttons.reset();
+        if let 0..=127 = rng.random_u8() {
             dot.toggle_clockwise();
             buttons.set_last_a();
-            crate::debug::info!("starting clockwise toggled");
         }
         crate::debug::info!("starting clockwise = {}", dot.is_clockwise());
         sound.play_track(&DI_HI);
