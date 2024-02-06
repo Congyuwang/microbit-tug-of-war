@@ -45,6 +45,7 @@ pub fn idle_animation(
 }
 
 /// movement of dot in idle state.
+#[inline]
 fn dot_idle_spiral(dot: &mut DotState) {
     dot.spiral(|dot| dot.toggle_clockwise());
 }
