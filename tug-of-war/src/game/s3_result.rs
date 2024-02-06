@@ -26,10 +26,6 @@ pub fn result_animation(
         _ => (),
     }
 
-    // update states
-    // 256HZ * 256 = 1s
-    *cnt = cnt.wrapping_add(1);
-
     if !*one_sec && *cnt == u8::MAX {
         buttons.reset();
         *one_sec = true;
@@ -39,6 +35,8 @@ pub fn result_animation(
         clear_result_col(*cnt, player_b_wins, display_pins);
         return true;
     }
+
+    *cnt = cnt.wrapping_add(1);
 
     false
 }
