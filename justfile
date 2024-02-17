@@ -5,6 +5,9 @@ build:
 flash:
     cd tug-of-war && cargo embed --target thumbv7em-none-eabihf --release
 
+flash-output-sound:
+    cd tug-of-war && cargo embed --target thumbv7em-none-eabihf --release --features output-sound
+
 debug:
     cd tug-of-war && cargo embed --target thumbv7em-none-eabihf
 

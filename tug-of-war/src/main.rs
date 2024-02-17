@@ -6,7 +6,7 @@ use microbit::{
     board::Buttons,
     gpio::{DisplayPins, NUM_COLS, NUM_ROWS},
     hal::{
-        gpio::{p0::P0_00, Disconnected, PushPull},
+        gpio::{Disconnected, Pin, PushPull},
         gpiote::Gpiote,
         rtc::RtcInterrupt,
         Clocks, Rng, Rtc,
@@ -63,7 +63,10 @@ fn main() -> ! {
         board.buttons,
         board.GPIOTE,
         board.RNG,
-        board.speaker_pin,
+        #[cfg(not(feature = "output-sound"))]
+        board.speaker_pin.degrade(),
+        #[cfg(feature = "output-sound")]
+        board.pins.p0_02.degrade(),
         board.PWM0,
         board.NVIC,
     );
@@ -92,7 +95,7 @@ fn init_device(
     buttons: Buttons,
     gpiote: GPIOTE,
     rng: RNG,
-    speaker: P0_00<Disconnected>,
+    speaker: Pin<Disconnected>,
     pwm: PWM0,
     mut nvic: NVIC,
 ) {
@@ -111,7 +114,7 @@ fn init_device(
         Gpiote::new(gpiote),
     );
     let display = display.degrade();
-    let sound = Sound::init(pwm, speaker.degrade());
+    let sound = Sound::init(pwm, speaker);
     let rng = Rng::new(rng);
     cortex_m::interrupt::free(|cs| {
         DEVICE.init(
