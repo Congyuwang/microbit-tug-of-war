@@ -14,21 +14,34 @@ mod s3_result;
 
 /// The state machine of the game.
 pub enum Game {
+    /// Idle animation after device is started.
     IdleAnimation {
+        /// position of the dot
         dot: DotState,
+        /// tick count (256HZ)
         cnt: i8,
     },
+    /// Count down animation after both players are ready.
     ReadyAnimation {
+        /// count down (initialized as 3).
         count_down: u8,
+        /// tick count (256HZ)
         cnt: u8,
     },
+    /// On-going game.
     Playing {
+        /// position of the dot
         dot: DotState,
+        /// tick count (256HZ)
         cnt: i8,
     },
+    /// Result animation
     Result {
+        /// who wins
         winner: Players,
+        /// tick count (256HZ)
         cnt: u8,
+        /// flag to wait at least 1 sec before ready again.
         one_sec: bool,
     },
 }

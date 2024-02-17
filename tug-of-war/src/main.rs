@@ -98,8 +98,8 @@ fn init_device(
 ) {
     // enable interrupts
     unsafe {
-        nvic.set_priority(interrupt::GPIOTE, 32);
-        nvic.set_priority(interrupt::RTC0, 64);
+        nvic.set_priority(interrupt::RTC0, 32);
+        nvic.set_priority(interrupt::GPIOTE, 64);
         nvic.set_priority(interrupt::PWM0, 128);
         NVIC::unmask(interrupt::RTC0);
         NVIC::unmask(interrupt::GPIOTE);
